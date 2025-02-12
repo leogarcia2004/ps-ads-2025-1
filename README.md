@@ -10,3 +10,9 @@
 9. Na caixa de diálogo que se abre no alto da janela, cole o endereço do repositório copiado no passo 6.
 10. Escolha um pasta local do computador para armazenar os arquivos do repositório clonado.
 11. Ao ser perguntado se deseja abrir o repositório clonado, clique sobre o botão <code>[Abrir]</code>.
+
+# Criando um projeto Express.js
+Siga as instruções deste [artigo](https://faustocintra.com.br/desenvolvimento-back-end/criando-um-projeto-express-js-em-2024/).
+
+# Criando e configurando a conexão do Prisma ORM com o Supabase (PostgreSQL)
+Siga as instruções deste [outro artigo](https://faustocintra.com.br/desenvolvimento-back-end/configurando-a-conexao-do-prisma-orm-com-o-supabase-postgresql/).
