@@ -14,11 +14,13 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Tabela de clientes
 model Customer {
-  id              Int   @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
+  name            String        @default("João das Couves")
   ident_document  String
-  birth_name      DateTime?
-  street_name     String   
+  birth_date      DateTime?     // ? significa que o campo é opcional
+  street_name     String
   house_number    String
   complements     String?
   district        String
@@ -26,4 +28,25 @@ model Customer {
   state           String
   phone           String
   email           String
+}
+
+model Car {
+  id                Int           @id @default(autoincrement())
+  brand             String        // Marca do carro
+  model             String        // Modelo do carro
+  color             String        // Cor do carro
+  year_manufacture  Int           // Ano de fabricação
+  imported          Boolean       // Se o carro é importado ou não
+  plates            String        // Placas do carro
+  selling_date      DateTime?     // Data de venda; preenchimento opcional
+  selling_price     Decimal?      // Preço de venda; preenchimento opcional 
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  fullname     String   
+  username     String   @unique // Não pode haver dois usuários com o mesmo username, ou seja, é um campo único, não pode se repetir na tabela
+  email        String   @unique // Não pode haver dois usuários com o mesmo email, ou seja, é um campo único, não pode se repetir na tabela
+  password     String   @unique // Não pode haver dois usuários com a mesma senha, ou seja, é um campo único, não pode se repetir na tabela
+  is_admin     Boolean  @default(false)
 }

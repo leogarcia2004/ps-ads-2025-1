@@ -1,10 +1,12 @@
 import prisma from "../database/client.js";
-
+import bcrypt from "bcrypt";
 const controller = {};
 
 controller.create = async (req, res) => {
   try {
-    await prisma.customer.create({ data: req.body });
+    if(req.body.password) req.body.password = await bcrypt.hash(req.body.password, 12);
+
+    await prisma.user.create({ data: req.body });
     res.status(201).end();
   } catch (error) {
     res.status(500).end();
@@ -14,8 +16,8 @@ controller.create = async (req, res) => {
 
 controller.retrieveAll = async (req, res) => {
   try {
-    const result = await prisma.customer.findMany({
-      orderBy: [{ name: "asc" }],
+    const result = await prisma.user.findMany({
+      orderBy: [{ fullname: "asc" }],
     });
     res.send(result);
   } catch (error) {
@@ -26,7 +28,7 @@ controller.retrieveAll = async (req, res) => {
 
 controller.retrieveOne = async (req, res) => { // Padrão esse modelo de função
   try {
-    const result = await prisma.customer.findUnique({
+    const result = await prisma.user.findUnique({
       where: { id: parseInt(req.params.id) },
     });
     if(result) res.send(result);
@@ -40,7 +42,9 @@ controller.retrieveOne = async (req, res) => { // Padrão esse modelo de funçã
 
 controller.update = async (req, res) => {
   try {
-    await prisma.customer.update({
+
+    if(req.body.password) req.body.password = await bcrypt.hash(req.body.password, 12);
+    await prisma.user.update({
       where: { id: parseInt(req.params.id) },
       data: req.body,
     });
@@ -55,7 +59,7 @@ controller.update = async (req, res) => {
 
 controller.delete = async (req, res) => {
   try {
-    await prisma.customer.delete({
+    await prisma.user.delete({
       where: { id: parseInt(req.params.id) },
     });
     res.status(204).end();
