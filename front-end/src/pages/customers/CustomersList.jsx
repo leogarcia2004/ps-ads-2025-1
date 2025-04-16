@@ -111,10 +111,7 @@ export default function CustomersList() {
       feedbackWait(true)
       try {
         // Envia a requisição para exclusão
-        await fetch(
-          import.meta.env.VITE_API_BASE + `/customers/${id}`,
-          { method: 'DELETE' }
-        )
+        await fetchAuth.delete(`/customers/${id}`)
 
         // Atualiza os dados do datagrid
         loadData()

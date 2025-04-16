@@ -1,74 +1,132 @@
-import prisma from "../database/client.js";
-import bcrypt from "bcrypt";
-import jwt from 'jsonwebtoken';
+import prisma from '../database/client.js'
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
-const controller = {};
+const controller = {}   // Objeto vazio
 
-controller.create = async (req, res) => {
+controller.create = async function (req, res) {
   try {
-    if(req.body.password) req.body.password = await bcrypt.hash(req.body.password, 12);
+    // Se existe o campo 'password' em req.body,
+    // é necessário gerar o hash da senha antes
+    // de armazená-lo no BD
+    if(req.body.password) {
+      req.body.password = await bcrypt.hash(req.body.password, 12)
+    }
 
-    await prisma.user.create({ data: req.body });
-    res.status(201).end();
-  } catch (error) {
-    res.status(500).end();
-    console.error(error);
+    // Dentro do parâmetro req (requisição), haverá
+    // um objeto chamado "body" que contém as informações
+    // que queremos armazenar do BD. Então, invocamos o
+    // Prisma para fazer a interface com o BD, repassando
+    // o req.body
+    await prisma.user.create({ data: req.body })
+
+    // Se der tudo certo, enviamos como resposta o 
+    // código HTTP apropriado, no caso
+    // HTTP 201: Created
+    res.status(201).end()
   }
-};
+  catch(error) {
+    // Se algo de errado acontecer, cairemos aqui
+    // Nesse caso, vamos exibir o erro no console e enviar
+    // o código HTTP correspondente a erro do servidor
+    // HTTP 500: Internal Server Error
+    console.error(error)
+    res.status(500).end()
+  }
+}
 
-controller.retrieveAll = async (req, res) => {
+controller.retrieveAll = async function (req, res) {
   try {
+    // Recupera todos os registros de usuários do banco de dados,
+    // ordenados pelo campo "model"
     const result = await prisma.user.findMany({
-      orderBy: [{ fullname: "asc" }],
-    });
-    res.send(result);
-  } catch (error) {
-    res.status(500).end();
-    console.error(error);
-  }
-};
+      omit: { password: true },         // Não retorna o campo 'password'
+      orderBy: [ { fullname: 'asc' } ]
+    })
 
-controller.retrieveOne = async (req, res) => { // Padrão esse modelo de função
+    // HTTP 200: OK (implícito)
+    res.send(result)
+  }
+  catch(error) {
+    // Se algo de errado acontecer, cairemos aqui
+    // Nesse caso, vamos exibir o erro no console e enviar
+    // o código HTTP correspondente a erro do servidor
+    // HTTP 500: Internal Server Error
+    console.error(error)
+    res.status(500).end()
+  }
+}
+
+controller.retrieveOne = async function (req, res) {
   try {
+    // Busca no banco de dados apenas o usuário indicado
+    // pelo parâmetro "id"
     const result = await prisma.user.findUnique({
-      where: { id: parseInt(req.params.id) },
-    });
-    if(result) res.send(result);
-    else res.status(404).end();
+      omit: { password: true },         // Não retorna o campo 'password'
+      where: { id: Number(req.params.id) }
+    })
 
-  } catch (error) {
-    res.status(500).end();
-    console.error(error);
+    // Encontrou ~> HTTP 200: OK (implícito)
+    if(result) res.send(result)
+
+    // Não encontrou ~> HTTP 404: Not found
+    else res.status(404).end()
+  }
+  catch(error) {
+    // Se algo de errado acontecer, cairemos aqui
+    // Nesse caso, vamos exibir o erro no console e enviar
+    // o código HTTP correspondente a erro do servidor
+    // HTTP 500: Internal Server Error
+    console.error(error)
+    res.status(500).end()
   }
 }
 
-controller.update = async (req, res) => {
+controller.update = async function(req, res) {
   try {
+    // Se existe o campo 'password' em req.body,
+    // é necessário gerar o hash da senha antes
+    // de armazená-lo no BD
+    if(req.body.password) {
+      req.body.password = await bcrypt.hash(req.body.password, 12)
+    }
 
-    if(req.body.password) req.body.password = await bcrypt.hash(req.body.password, 12);
+    // Busca o registro no banco de dados pelo seu id
+    // e atualiza as informações com o conteúdo de req.body
     await prisma.user.update({
-      where: { id: parseInt(req.params.id) },
-      data: req.body,
-    });
-    res.status(204).end();
-  } catch (error) {
+      where: { id: Number(req.params.id) },
+      data: req.body
+    })
 
-    if(error?.code === "P2025") res.status(404).end();
-    else res.status(404).end();
-    console.error(error);
+    // Encontrou e atualizou ~> HTTP 204: No content
+    res.status(204).end()
+  }
+  catch(error) {
+    console.error(error)
+    
+    // Não encontrou e não atualizou ~> HTTP 404: Not found
+    if(error?.code === 'P2025') res.status(404).end()
+    // Outros tipos de erro ~> HTTP 500: Internal server error
+    else res.status(500).end()
   }
 }
 
-controller.delete = async (req, res) => {
+controller.delete = async function(req, res) {
   try {
     await prisma.user.delete({
-      where: { id: parseInt(req.params.id) },
-    });
-    res.status(204).end();
-  } catch (error) {
-    if(error?.code === "P2025") res.status(404).end();
-    else res.status(404).end();
-    console.error(error);
+      where: { id: Number(req.params.id) }
+    })
+
+    // Encontrou e excluiu ~> HTTP 204: No content
+    res.status(204).end()
+  }
+  catch(error) {
+    console.error(error)
+    
+    // Não encontrou e não excluiu ~> HTTP 404: Not found
+    if(error?.code === 'P2025') res.status(404).end()
+    // Outros tipos de erro ~> HTTP 500: Internal server error
+    else res.status(500).end()
   }
 }
 
@@ -85,27 +143,37 @@ controller.login = async function (req, res) {
       }
     })
 
-    if(!user) {
-      // Se o usuário não existir, retornamos HTTP 404: Not Found
-      console.error("Usuário não encontrado")
+    // Se o usuário não for encontrado, retorna
+    // HTTP 401: Unauthorized
+    if(! user) {
+      console.error('ERRO DE LOGIN: usuário não encontrado')
       return res.status(401).end()
     }
 
-    const passwordIsValid = await bcrypt.compare(req.body.password, user.password)
+    // Usuário encontrado, vamos conferir a senha
+    const passwordIsValid = await bcrypt.compare(req.body?.password, user.password)
 
-    if(!passwordIsValid) {
-      // Se a senha não for válida, retornamos HTTP 401: Unauthorized
-      console.error("Senha inválida")
+    // Se a senha estiver errada, retorna
+    // HTTP 401: Unauthorized
+    if(! passwordIsValid) {
+      console.error('ERRO DE LOGIN: senha inválida')
       return res.status(401).end()
     }
 
+    // Deleta o campo "password" do objeto "user" antes de usá-lo
+    // no token e no valor de retorno
+    if(user.password) delete user.password
+
+    // Usuário/email e senha OK, passamos ao procedimento de gerar o token
     const token = jwt.sign(
-      user,
-      process.env.TOKEN_SECRET,
-      { expiresIn: '24h' }
+      user,                       // Dados do usuário
+      process.env.TOKEN_SECRET,   // Senha para criptografar o token
+      { expiresIn: '24h' }        // Prazo de validade do token
     )
 
-    res.send({ token,user })
+    // Retorna o token e o usuário autenticado, com o status
+    // HTTP 200: OK (implícito)
+    res.send({ token, user })
   }
   catch(error) {
     // Se algo de errado acontecer, cairemos aqui
@@ -117,4 +185,13 @@ controller.login = async function (req, res) {
   }
 }
 
-export default controller;
+controller.me = function(req, res) {
+  /*
+    Retorna o usuário autenticado (caso haja) que foi armazenado na
+    variável req.authUser pelo middleware de autorização logo após
+    o token ter sido decodificado
+  */
+  return res.send(req?.authUser)
+}
+
+export default controller

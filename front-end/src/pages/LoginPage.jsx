@@ -10,6 +10,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { useNavigate } from 'react-router-dom'
 import { feedbackNotify, feedbackWait } from '../ui/Feedback'
 
+import fetchAuth from '../lib/fetchAuth'
+
 export default function LoginPage() {
 
   const [state, setState] = React.useState({
@@ -49,31 +51,12 @@ export default function LoginPage() {
 
       // Envia email (ou username) e password para o back-end para fazer
       // a autenticação
-      const response = await fetch(
-        import.meta.env.VITE_API_BASE + '/users/login',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(loginData)
-        }
-      )
-
-      console.log({response})
-      
-      // Verificamos se a resposta corresponde a um status de erro
-      if(response.status === 401) {
-        throw new Error('ERRO: usuário ou senha inválidos')
-      }
-      else if(response.status >= 400) {
-        throw new Error(`ERRO: [${response.status}] ${response.statusText}`)
-      }
-      
-      const data = await response.json()
+      const result = await fetchAuth.post('/users/login', loginData)
 
       // Armazena o token retornado no localStorage para posterior utilização
       window.localStorage.setItem(
         import.meta.env.VITE_AUTH_TOKEN_NAME,
-        data.token
+        result.token
       )
 
       feedbackNotify(

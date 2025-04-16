@@ -12,6 +12,8 @@ import InputMask from 'react-input-mask'
 import { feedbackWait, feedbackNotify, feedbackConfirm } from '../../ui/Feedback'
 import { useNavigate, useParams } from 'react-router-dom'
 
+import fetchAuth from '../../lib/fetchAuth'
+
 export default function CustomersForm() {
 
   const brazilianStates = [
@@ -67,10 +69,8 @@ export default function CustomersForm() {
   async function loadData() {
     feedbackWait(true)
     try {
-      const response = await fetch(
-        import.meta.env.VITE_API_BASE + '/customers/' + params.id 
-      )
-      const result = await response.json()
+      
+      const result = await fetchAuth.get('/customers/' + params.id)
       
       // Converte o formato da data armazenado no banco de dados
       // para o formato reconhecido pelo componente DatePicker
@@ -112,28 +112,21 @@ export default function CustomersForm() {
     feedbackWait(true)
     try {
       // Prepara as opções para o fetch
-      const reqOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(customer)
-      }
+      // const reqOptions = {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(customer)
+      // }
 
       // Infoca o fetch para enviar os dados ao back-end.
       // Se houver parâmetro na rota, significa que estamos alterando
       // um registro existente e, portanto, o verbo precisa ser PUT
       if(params.id) {
-        reqOptions.method = 'PUT'
-        await fetch(
-          import.meta.env.VITE_API_BASE + '/customers/' + params.id,
-          reqOptions
-        )
+        await fetchAuth.put('/customers/' + params.id, customer)
       }
       // Senão, envia com o método POST para criar um novo registro
       else {
-        await fetch(
-          import.meta.env.VITE_API_BASE + '/customers',
-          reqOptions
-        )
+        await fetchAuth.post('/customers', customer)
       }
 
       feedbackNotify('Item salvo com sucesso.', 'success', 4000, () => {
