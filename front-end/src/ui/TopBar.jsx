@@ -5,6 +5,9 @@ import Toolbar from '@mui/material/Toolbar';
 import MenuIcon from '@mui/icons-material/Menu';
 import logo from '../assets/karangos-logo-600px.png'
 import MainMenu from './MainMenu';
+import Button  from '@mui/material/Button';
+import { Link } from 'react-router-dom';
+
 export default function TopBar() {
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -15,6 +18,10 @@ export default function TopBar() {
           <Box>
             <img src={logo} alt="LogoTipo Karangos" style={{width: '300px'}}/>
           </Box>
+
+          <Link to="/login">
+            <Button color="secondary">Entrar</Button>
+          </Link>
         </Toolbar>
       </AppBar>
     </Box>
