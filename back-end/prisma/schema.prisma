@@ -50,3 +50,13 @@ model User {
   password     String   @unique // Não pode haver dois usuários com a mesma senha, ou seja, é um campo único, não pode se repetir na tabela
   is_admin     Boolean  @default(false)
 }
+
+model Seller {
+  id               Int      @id @default(autoincrement())
+  fullname         String
+  birth_date       DateTime
+  identity_document String  @unique
+  email            String   @unique
+  phone            String
+  is_manager       Boolean  @default(false)
+}
