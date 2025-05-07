@@ -1,26 +1,29 @@
-import { Routes, Route} from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 
-import Homepage from '../pages/Homepage'
+import AuthGuard from './AuthGuard'
 
-import CustomersList from '../pages/customers/CustomersList'
-import CustomersForm from '../pages/customers/CustomersForm'
-import CarsList from '../pages/cars/CarsList'
-import CarsForm from '../pages/cars/CarsForm'
-import NovoComponente from '../pages/NovoComponente'
-import LoginPage from '../pages/LoginPage'
+import routes from './routes'
 
-export default function AppRoutes(){
-    return (
-        <Routes>
-            <Route path="/" element = { <Homepage />} />
-            <Route path="/login" element={ <LoginPage /> } />
-            <Route path="/NovoComponente" element = { <NovoComponente/>} />
-            <Route path="/customers" element = { <CustomersList />} />
-            <Route path="/customers/new" element = { <CustomersForm />} />
-            <Route path="/customers/:id" element = { <CustomersForm />} />
-            <Route path="/cars" element = { <CarsList />} />
-            <Route path="/cars/new" element = { <CarsForm />} />
-            <Route path="/cars/:id" element = { <CarsForm />} />
-        </Routes>
-    )
+export default function AppRoutes() {
+  return (
+    <Routes>
+      {
+        routes.map(route => {
+          let element
+          if(route.authLevel > 0) {
+            element = <AuthGuard userLevel={route.userLevel}>
+              {route.element}
+            </AuthGuard>
+          }
+          else element = route.element
+          
+          return <Route 
+            key={route.route} 
+            path={route.route}
+            element={element}
+          />
+        })
+      }
+    </Routes>
+  )
 }
