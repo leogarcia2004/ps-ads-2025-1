@@ -1,326 +1,328 @@
 import React from 'react'
-import Typography from '@mui/material/Typography'
+
 import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
-import { ptBR } from 'date-fns/locale/pt-BR'
-import { parseISO } from 'date-fns'
-import MenuItem from '@mui/material/MenuItem'
+import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
-import InputMask from 'react-input-mask'
-import { feedbackWait, feedbackNotify, feedbackConfirm } from '../../ui/Feedback'
-import { useNavigate, useParams } from 'react-router-dom'
-import FormControlLabel from '@mui/material/FormControlLabel'
+import TextField from '@mui/material/TextField'
 import Checkbox from '@mui/material/Checkbox'
+import FormControlLabel from '@mui/material/FormControlLabel'
+
+import { useNavigate, useParams } from 'react-router-dom'
 
 import fetchAuth from '../../lib/fetchAuth'
 
-export default function CarsForm() {
+import { feedbackConfirm, feedbackWait, feedbackNotify } from '../../ui/Feedback'
 
-  // Lista de cores dos carros em ordem alfabética disponíveis para o usúario escolher
-  const colors = [
-    { value: 'AMARELO', label: 'AMARELO' },
-    { value: 'AZUL', label: 'AZUL' },
-    { value: 'BRANCO', label: 'BRANCO' },
-    { value: 'CINZA', label: 'CINZA' },
-    { value: 'DOURADO', label: 'DOURADO' },
-    { value: 'LARANJA', label: 'LARANJA' },
-    { value: 'MARROM', label: 'MARROM' },
-    { value: 'PRATA', label: 'PRATA' },
-    { value: 'PRETO', label: 'PRETO' },
-    { value: 'ROSA', label: 'ROSA' },
-    { value: 'ROXO', label: 'ROXO' },
-    { value: 'VERDE', label: 'VERDE' },
-    { value: 'VERMELHO', label: 'VERMELHO' },
-  ]
-
-  // Máscara para o formato da placa do carro
-  const platesMaskFormatChars = {
-    '9': '[0-9]',    // somente dígitos
-    '$': '[0-9A-J]',  // dígito de 0 a 9 ou uma letra de A a J.
-    'A': '[A-Z]',
-  }
-
-  // Cria um vetor com os anos disponíveis, do ano atual até 1951
-  const years = [] 
-  // Date() pega a data atual. ex: 8 de novembro de 2024. O getFullYear() pega só o ano, ex: 2024
-  for (let year = new Date().getFullYear(); year >= 1951; year--) {   
-    years.push(year) // add no vetor years
-  }
-
-  /* Defini os valores padrão do formulário que são uma string vazia. selling_price e selling_date 
-  são null, porque são campos não obrigatórios. e imported é false porque é um bolleano */
+export default function UsersForm() {
+  /*
+    Por padrão, todos os campos do formulário terão como
+    valor inicial uma string vazia (exceto os booleanos)
+  */
   const formDefaults = {
-    brand: '',
-    model: '',
-    color: '',
-    year_manufacture: '',
-    imported: false,
-    plates: '',
-    selling_price: '',
-    selling_date: null
+    fullname: '',
+    username: '',
+    email: '',
+    confirm_email: '',
+    password: '',
+    confirm_password: '',
+    is_admin: false
   }
 
-  const navigate = useNavigate()
-  const params = useParams()
-
-  const [state, setState] = React.useState({
-    car: { ...formDefaults },
-    formModified: false
-  })
+  const [state, setState] = React.useState(() => ({
+    user: { ...formDefaults },
+    showPasswordFields: false,
+    formModified: false,
+    inputErrors: {}
+  }))
   const {
-    car,
-    formModified
+    user,
+    showPasswordFields,
+    formModified,
+    inputErrors
   } = state
 
-  /*Se estivermos editando um carro, precisamos carregar seus dados assim que o componente for carregado */
-  React.useEffect(() => {
-    /*Sabemos que estamos editando (e não cadastrando um novo) carro quando a rota ativa contiver um parâmetro id */
-    if (params.id) loadData()
-  }, [])
+  const params = useParams()
+  const navigate = useNavigate()
 
-  // Função para carregar os dados de um carro existente da API
+  function handleFieldChange(event) {
+    const userCopy = { ...user }
+
+    if(event.target.name === 'is_admin') {
+      userCopy.is_admin = event.target.checked
+    }
+    else {
+      userCopy[event.target.name] = event.target.value
+    }
+
+    setState({ ...state, user: userCopy, formModified: true })
+  }
+
+  async function handleFormSubmit(event) {
+    event.preventDefault()  // Evita o recarregamento da página
+    feedbackWait(true)
+    try {
+      // Limpa as mensagens de erro
+      setState({ ...state, inputErrors: {} })
+
+      // Validação dos campos de senha e e-mail
+      user.email = user.email.toLowerCase()
+      user.confirm_email = user.confirm_email.toLowerCase()
+      
+      const msg = []
+
+      if(user.email !== user.confirm_email) {
+        msg.push('A confirmação do e-mail não coincide com o e-mail')
+        const inputErrorsCopy = { ...inputErrors, confirm_email: msg.at(-1) }
+        setState({ ...state, inputErrors: inputErrorsCopy })
+      }
+
+      /*
+        A validação da senha somente será processada se os respectivos
+        campos estiverem visíveis
+      */
+      if(showPasswordFields && user.password !== user.confirm_password) {
+        msg.push('A confirmação da senha não coincide com a senha.')
+        const inputErrorsCopy = { ...inputErrors, confirm_password: msg.at(-1) }
+        setState({ ...state, inputErrors: inputErrorsCopy })
+      }
+
+      // Lançamos uma exceção com todas as mensagens de erro caso
+      // tenha havido erros de validação
+      if(msg.length > 0) throw new Error(msg.join('\n'))
+
+      // Apaga os campos de confirmação do objeto de dados que será
+      // enviado ao back-end
+      delete user.confirm_email
+      delete user.confirm_password
+
+      // Se os campos de senha não estiverem visíveis, apaga também o
+      // campo 'password'
+      if(!showPasswordFields) delete user.password
+
+      /*
+        Se houver parâmetro na rota, significa que estamos modificando um
+        usuário existente. A requisição será enviada ao back-end usando o
+        método PUT
+      */
+      if(params.id) await fetchAuth.put(`/users/${params.id}`, user)
+      /*
+        Caso contrário, estamos criando um novo usuário, e enviaremos a
+        requisição com o método POST
+      */
+      else fetchAuth.post('/users', user)
+
+      /*
+        A requisição sendo bem-sucedida, vamos exibir a mensagem de feedback
+        que, quando for fechada, nos enviará de volta para a listagem de
+        usuários
+      */
+      feedbackNotify('Item salvo com sucesso.', 'success', 2500, () => {
+        navigate('..', { relative: 'path', replace: true })
+      })
+    }
+    catch(error) {
+      console.error(error)
+      feedbackNotify(error.message, 'error')
+    }
+    finally {
+      feedbackWait(false)
+    }
+  }
+
   async function loadData() {
     feedbackWait(true)
     try {
-      const response = await fetchAuth.get('//' + params.id)
-      const result = await response.json()
-      
-      /*Converte o formato da data armazenado no banco de dados para o formato reconhecido pelo componente DatePicker */
-      if(result.selling_date) result.selling_date = parseISO(result.selling_date)
-      setState({ ...state, car: result, formModified: false })
-    }
-    catch(error) {
-      console.log(error)
-      feedbackNotify('ERRO: ' + error.message, 'error')
-    }
-    finally {
-      feedbackWait(false)
-    }
-  }
+      let userTemp = { ...formDefaults }
 
-  /* Preenche o campo do objeto car conforme o campo correspondente do formulário for modificado */
-  function handleFieldChange(event) {
-    // Tira uma cópia da variável de estado car
-    const carsCopy = { ...car }
-    // Altera em carsCopy apenas o campo da vez
-    carsCopy[event.target.name] = event.target.value
-    // Atualiza a variável de estado, substituindo o objeto car por sua cópia atualizada
-    setState({ ...state, car: carsCopy, formModified: true })
-  }
-
-  // Função para salvar os dados do formulário
-  async function handleFormSubmit(event) {
-    event.preventDefault()      // Impede o recarregamento da página
-    feedbackWait(true)
-    try {
-      /* Infoca o fetch para enviar os dados ao back-end.
-      Se houver parâmetro na rota, significa que estamos alterando
-      um registro existente e, portanto, o verbo precisa ser PUT */
+      /*
+        Se houver parâmetro na rota, precisamos buscar o usuário
+        para ser editado
+      */
       if(params.id) {
-        await fetchAuth.put('/cars/' + params.id, car)
-      }
-      // Senão, envia com o método POST para criar um novo registro
-      else {
-        await fetchAuth.post('/cars', car)
+        userTemp = await fetchAuth.get(`/users/${params.id}`)
+        // Iniciamos o campo 'confirm_email' com o mesmo valor de 'email'
+        userTemp.confirm_email = userTemp.email
       }
 
-      // Exibe uma mensagem de sucesso e vai para a página de listagem dos carros
-      feedbackNotify('Item salvo com sucesso.', 'success', 4000, () => {
-        // Retorna para a página de listagem
-        navigate('..', { relative: 'path', replace: true })
-      })
-
+      /*
+        Se não houver parâmetro na rota, significa que estamos cadastrando
+        um novo usuário e que, portanto, os campos de senha devem ser
+        exibidos. Caso contrário, havendo o parâmetro, estaremos editando
+        um usuário existente e os campos de senha não serão exibidos por
+        padrão
+      */
+      setState({ ...state, user: userTemp, showPasswordFields: !(params.id) })
+      
     }
     catch(error) {
-      console.log(error)
-      feedbackNotify('ERRO: ' + error.message, 'error')
+      console.error(error)
+      feedbackNotify(error.message, 'error')
     }
     finally {
       feedbackWait(false)
     }
   }
 
-  // Função para voltar para a página anterior
-  async function handleBackButtonClick() {
-    if(
-      formModified && 
-      ! await feedbackConfirm('Há informações não salvas. Deseja realmente voltar?')
-    ) return // Sai da função sem fazer nada
+  /*
+    useEffect() que será executado apenas uma vez, no carregamento da página
+  */
+  React.useEffect(() => {
+    loadData()
+  }, [])
 
-    // Aqui o usuário respondeu que quer voltar e perder os dados
-    navigate('..', { relative: 'path', 'replace': true })
+  async function handleBackButtonClick() {
+    if(formModified && 
+      !(await feedbackConfirm('Há informações não salvas. Deseja realmente sair?'))) return   // Sai da função sem fazer nada
+
+    // Navega de volta para a página de listagem
+    navigate('..', { relative: 'path', replace: true })
   }
 
-  return (
-    <>
-      { /* gutterBottom coloca um espaçamento extra abaixo do componente */ }
-      <Typography variant="h1" gutterBottom>
-        {params.id ? `Editar veículo #${params.id}` : 'Cadastrar novo veículo'}
-      </Typography>
+  return <>
+    <Typography variant="h1" gutterBottom>
+      { params.id ? `Editar usuário #${params.id}` : 'Cadastrar novo usuário' }
+    </Typography>
 
-      <Box className="form-fields">
-        <form onSubmit={handleFormSubmit}>
+    <Box className="form-fields">
+      <form onSubmit={handleFormSubmit}>
 
-          {/* autoFocus = foco do teclado no primeiro campo */}
-          <TextField
-            variant="outlined" 
-            name="brand"
-            label="Marca do carro"
-            fullWidth
-            required
-            autoFocus
-            value={car.brand}
-            onChange={handleFieldChange}
+        <TextField
+          name="fullname"
+          label="Nome completo"
+          variant="filled"
+          required
+          fullWidth
+          value={user.fullname}
+          onChange={handleFieldChange}
+          helperText={inputErrors?.fullname}
+          error={inputErrors?.fullname}
+        />
+
+        <TextField
+          name="username"
+          label="Nome de usuário"
+          variant="filled"
+          required
+          fullWidth
+          value={user.username}
+          onChange={handleFieldChange}
+          helperText={inputErrors?.username}
+          error={inputErrors?.username}
+        />
+
+        <TextField
+          name="email"
+          label="E-mail"
+          variant="filled"
+          required
+          fullWidth
+          value={user.email}
+          onChange={handleFieldChange}
+          helperText={inputErrors?.email}
+          error={inputErrors?.email}
+        />
+
+        <TextField
+          name="confirm_email"
+          label="Confirme o e-mail"
+          variant="filled"
+          required
+          fullWidth
+          value={user.confirm_email}
+          onChange={handleFieldChange}
+          helperText={inputErrors?.confirm_email}
+          error={inputErrors?.confirm_email}
+        />
+
+        <div className="MuiFormControl-root">
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="is_admin"
+                variant="filled"
+                value={user.is_admin}
+                checked={user.is_admin}
+                onChange={handleFieldChange}
+                color="primary"
+              />
+            }
+            label="É admin?"
           />
-          <TextField
-            variant="outlined" 
-            name="model"
-            label="Modelo do carro"
-            fullWidth
-            required
-            value={car.model}
-            onChange={handleFieldChange}
-          />
-          <TextField
-            select
-            variant="outlined" 
-            name="color"
-            label="Cor"
-            fullWidth
-            required
-            value={car.color}
-            onChange={handleFieldChange}
-          > 
-          {/* Lista de cores para selecionar */}
-          {colors.map(s => 
-                <MenuItem key={s.value} value={s.value}>
-                  {s.label}
-                </MenuItem>
-              )}
-          </TextField>
-          <TextField
-            select
-            variant="outlined" 
-            name="year_manufacture"
-            label="Ano de fabricação"
-            fullWidth
-            required
-            value={car.year_manufacture}
-            onChange={handleFieldChange}
-          >
-            {/* Lista de anos para selecionar */}
-            {years.map(y => 
-                <MenuItem key={y} value={y}>
-                  {y}
-                </MenuItem>
-              )}
-          </TextField>
+        </div>
 
-          {/* Checkbox para marcar se o carro é importado */}
+        { params.id && 
           <div className="MuiFormControl-root">
             <FormControlLabel
               control={
                 <Checkbox
-                  name='imported'
-                  checked={car.imported}
-                  onChange={(event)=> 
-                    setState({ ...state, car: { ...car, imported: event.target.checked}, formModified: true})
+                  name="change_password"
+                  variant="filled"
+                  value={showPasswordFields}
+                  checked={showPasswordFields}
+                  onChange={
+                    () => setState({ ...state, showPasswordFields: !showPasswordFields})
                   }
+                  color="primary"
                 />
               }
-              label='É importado?'
+              label="Alterar senha"
             />
-          </div>    
-          {/* Campo para placa do carro com a máscara*/}
-          <InputMask
-            mask='AAA-9$99'
-            value={car.plates}
-            onChange={handleFieldChange}
-            formatChars={platesMaskFormatChars}
-          >
-            { () => 
-                <TextField
-                  variant="outlined" 
-                  name="plates"
-                  label="Placa" 
-                  fullWidth
-                  required
-                />
-            }
-          </InputMask>
+          </div>
+        }
+
+        { showPasswordFields &&
           <TextField
-            variant="outlined" 
-            name="selling_price"
-            label="Preço de venda"
+            name="password"
+            label="Senha"
+            variant="filled"
+            required={showPasswordFields}
             fullWidth
-            required
-            type='number'
-            value={car.selling_price}
+            type="password"
+            value={user.password}
             onChange={handleFieldChange}
+            helperText={inputErrors?.password}
+            error={inputErrors?.password}
           />
+        }
 
-          {/*
-            O evento onChange do componente DatePicker não passa
-            o parâmetro event, como no TextField, e sim a própria
-            data que foi modificada. Por isso, ao chamar a função
-            handleFieldChange no DatePicker, precisamos criar um
-            parâmetro event "fake" com as informações necessárias
-          */}
-          <LocalizationProvider 
-            dateAdapter={AdapterDateFns}
-            adapterLocale={ptBR}
-          >
-            <DatePicker
-              label="Data de venda"
-              value={car.selling_date || null}
-              slotProps={{
-                textField: {
-                  variant: 'outlined',
-                  fullWidth: true
-                }
-              }}
-              onChange={ date => {
-                const event = { target: { name: 'selling_date', value: date } }
-                handleFieldChange(event)
-              }}
-            />
-          </LocalizationProvider>
+        { showPasswordFields &&
+          <TextField
+            name="confirm_password"
+            label="Confirme a senha"
+            variant="filled"
+            required={showPasswordFields}
+            fullWidth
+            type="password"
+            value={user.confirm_password}
+            onChange={handleFieldChange}
+            helperText={inputErrors?.confirm_password}
+            error={inputErrors?.confirm_password}
+          />
+        }
 
-          <Box sx={{ 
-            display: 'flex',
-            justifyContent: 'space-around',
-            width: '100%'
-          }}>
-            <Button
-              variant="contained"
-              color="secondary"
-              type="submit"
-            >
-              Salvar
-            </Button>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          width: '100%'
+        }}>
+          <Button variant="contained" color="secondary" type="submit">
+            Salvar
+          </Button>
+          <Button variant="outlined" onClick={handleBackButtonClick}>
+            Voltar
+          </Button>
+        </Box>
 
-            <Button
-              variant="outlined"
-              onClick={handleBackButtonClick}
-            >
-              Voltar
-            </Button>
-          </Box>
+      </form>
 
-          <Box sx={{
-            fontFamily: 'monospace',
-            display: 'flex',
-            flexDirection: 'column',
-            width: '100%'
-          }}>
-            {JSON.stringify(car, null, 2)}
-          </Box>
-
-        </form>
+      <Box sx={{
+        fontFamily: 'monospace',
+        display: 'flex',
+        width: '100%'
+      }}>
+        { JSON.stringify(user) }
       </Box>
-      
-    </>
-  )
+
+    </Box>
+  </>
 }

@@ -5,8 +5,10 @@ import Toolbar from '@mui/material/Toolbar';
 import MenuIcon from '@mui/icons-material/Menu';
 import logo from '../assets/karangos-logo-600px.png'
 import MainMenu from './MainMenu';
+import Button from '@mui/material/Button'
+import { Link } from 'react-router-dom'
 
-import AuthWidgets from './AuthWidgets';
+import AuthWidgets from './AuthWidgets'
 
 export default function TopBar() {
   return (
@@ -15,11 +17,14 @@ export default function TopBar() {
         <Toolbar variant="dense">        
             <MenuIcon />
           <MainMenu/>
-          <Box>
-            <img src={logo} alt="LogoTipo Karangos" style={{width: '300px'}}/>
+          <Box sx={{ flexGrow: 1 }}>
+            <Link to="/">
+              <img src={logo} alt="LogoTipo Karangos" style={{width: '300px'}}/>
+            </Link>
           </Box>
 
-          <AuthWidgets/>
+          <AuthWidgets />
+
         </Toolbar>
       </AppBar>
     </Box>

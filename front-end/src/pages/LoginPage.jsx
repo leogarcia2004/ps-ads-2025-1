@@ -12,6 +12,8 @@ import { feedbackNotify, feedbackWait } from '../ui/Feedback'
 
 import fetchAuth from '../lib/fetchAuth'
 
+import AuthContext from '../contexts/AuthContext'
+
 export default function LoginPage() {
 
   const [state, setState] = React.useState({
@@ -24,6 +26,8 @@ export default function LoginPage() {
     password,
     showPassword
   } = state
+
+  const { authState, setAuthState } = React.useContext(AuthContext)
 
   const navigate = useNavigate()
 
@@ -54,10 +58,13 @@ export default function LoginPage() {
       const result = await fetchAuth.post('/users/login', loginData)
 
       // Armazena o token retornado no localStorage para posterior utilização
-      window.localStorage.setItem(
-        import.meta.env.VITE_AUTH_TOKEN_NAME,
-        result.token
-      )
+      // window.localStorage.setItem(
+      //   import.meta.env.VITE_AUTH_TOKEN_NAME,
+      //   result.token
+      // )
+
+      // Guarda no contexto as informações sobre o usuário autenticado
+      setAuthState({ ...authState, authUser: result.user })
 
       feedbackNotify(
         'Autenticação realizada com sucesso', 

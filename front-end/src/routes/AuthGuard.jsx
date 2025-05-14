@@ -1,3 +1,4 @@
+
 import React from 'react'
 
 import Box from '@mui/material/Box'
@@ -63,13 +64,16 @@ export default function AuthGuard({ children, userLevel = 0 }) {
     checkAuthUser()
   }, [location])
 
-  if(status === 'PROCESSING') return <></>
+  if(['IDLE', 'PROCESSING'].includes(status)) return <></>
 
   /*
     Se não há usuário autenticado e o nível de acesso (> 0) assim o
     exige, redirecionamos para a página de login
   */
-  if(!authUser && userLevel > 0) return <Navigate to="/login" replace />
+  if(!authUser && userLevel > 0) {
+    console.log({authUser, userLevel})
+    return <Navigate to="/login" replace />
+  }
 
   /*
     Senão, se há um usuário não administrador tentando acessar uma

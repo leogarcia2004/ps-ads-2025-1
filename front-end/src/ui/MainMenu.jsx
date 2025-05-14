@@ -20,12 +20,17 @@ export default function MainMenu() {
   const { authState } = React.useContext(AuthContext)
   const { authUser } = authState
 
+  console.log('AUTHUSER NO MENU', authUser)
+
   // Determina o nível do usuário autenticado
   let currentUserLevel
 
   if(!authUser) currentUserLevel = 0
   else if(authUser.is_admin) currentUserLevel = 2
   else currentUserLevel = 1
+
+  console.log(authUser)
+  console.log('currentUserLevel', currentUserLevel)
 
   /*
     Filtra as rotas que se tornarão itens de menu, excluindo:
