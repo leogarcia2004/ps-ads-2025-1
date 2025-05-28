@@ -1,4 +1,5 @@
 import prisma from "../database/client.js";
+import { ZodError } from 'zod'
 
 const controller = {};
 
@@ -7,7 +8,7 @@ controller.create = async (req, res) => {
     await prisma.car.create({ data: req.body });
     res.status(201).end();
   } catch (error) {
-    res.status(500).end();
+    if(error instanceof ZodError) res.status(500).end();
     console.error(error);
   }
 };
@@ -48,7 +49,7 @@ controller.update = async (req, res) => {
   } catch (error) {
 
     if(error?.code === "P2025") res.status(404).end();
-    else res.status(404).end();
+    else if(error instanceof ZodError) res.status(404).end();
     console.error(error);
   }
 }

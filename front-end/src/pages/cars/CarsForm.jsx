@@ -14,6 +14,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
 // import TextInput from '@mui/material/TextField'
+import { ZodError } from 'zod'
 
 import fetchAuth from '../../lib/fetchAuth'
 
@@ -68,11 +69,13 @@ export default function CarsForm() {
 
   const [state, setState] = React.useState({
     cars: { ...formDefaults },
-    formModified: false
+    formModified: false,
+    inputErrors: true
   })
   const {
     cars,
-    formModified
+    formModified,
+    inputErrors
   } = state
 
   /*Se estivermos editando um carro, precisamos carregar seus dados assim que o componente for carregado */
@@ -137,7 +140,15 @@ export default function CarsForm() {
     }
     catch(error) {
       console.log(error)
-      feedbackNotify('ERRO: ' + error.message, 'error')
+      if(error instanceof ZodError) {
+          // Formamos um objeto contendo os erros do Zod e os colocamos
+          // na variável de estado inputErrors
+          const errorMessages = {}
+          for(let i of error.issues) errorMessages[i.path[0]] = i.message
+            setState({ ...state, inputErrors: errorMessages })
+            feedbackNotify('Há campos com valores inválidos. Verifique.', 'error')
+          }
+      else feedbackNotify('ERRO: ' + error.message, 'error')
     }
     finally {
       feedbackWait(false)
@@ -175,6 +186,8 @@ export default function CarsForm() {
             autoFocus
             value={cars.brand}
             onChange={handleFieldChange}
+            error={Boolean(inputErrors?.brand)}
+            helperText={inputErrors?.brand}
           />
           <TextField
             variant="outlined" 
@@ -184,6 +197,8 @@ export default function CarsForm() {
             required
             value={cars.model}
             onChange={handleFieldChange}
+            error={Boolean(inputErrors?.model)}
+            helperText={inputErrors?.model}
           />
           <TextField
             select
@@ -194,6 +209,8 @@ export default function CarsForm() {
             required
             value={cars.color}
             onChange={handleFieldChange}
+            error={Boolean(inputErrors?.color)}
+            helperText={inputErrors?.color}
           > 
           {/* Lista de cores para selecionar */}
           {colors.map(s => 
@@ -211,6 +228,8 @@ export default function CarsForm() {
             required
             value={cars.year_manufacture}
             onChange={handleFieldChange}
+            error={Boolean(inputErrors?.year_manufacture)}
+            helperText={inputErrors?.year_manufacture}
           >
             {/* Lista de anos para selecionar */}
             {years.map(y => 
@@ -249,6 +268,8 @@ export default function CarsForm() {
                   label="Placa" 
                   fullWidth
                   required
+                  error={Boolean(inputErrors?.plates)}
+                  helperText={inputErrors?.plates}
                 />
             }
           </InputMask>
@@ -261,6 +282,8 @@ export default function CarsForm() {
             type='number'
             value={cars.selling_price}
             onChange={handleFieldChange}
+            error={Boolean(inputErrors?.selling_price)}
+            helperText={inputErrors?.selling_price}
           />
 
           {/*
