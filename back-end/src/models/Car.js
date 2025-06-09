@@ -1,6 +1,8 @@
 import {z} from 'zod';
 
-const min_selling_date = '2020-01-01'
+const min_selling_date = new Date(2020, 0, 1);
+const min_year = new Date(1960, 0, 1)
+const min_year_manufacture = min_year.getFullYear();
 
 const Cars = z.object({
 
@@ -35,7 +37,7 @@ const Cars = z.object({
     
     year_manufacture: z.number()
         .int({ message: 'Ano deve ser um número inteiro.' })
-        .gte(1960, { message: 'Ano deve ser maior ou igual a 1960.' })
+        .min(min_year_manufacture, { message: 'Ano deve ser maior ou igual a 1960.' })
         .lte(new Date().getFullYear(), { message: `Ano deve ser menor ou igual ao ano atual.` }),
      
     imported: z.boolean()
@@ -46,16 +48,12 @@ const Cars = z.object({
         .length(8, { message: 'Placa deve ter exatamente 8 caracteres.' })
         .regex(/^[A-Z]{3}-\d{4}$/, { message: 'Placa deve seguir o formato ABC-1234.' }),
 
-    selling_date: z.coerce.date().optional()
-    .refine(val => val instanceof Date && !isNaN(val.getTime()), {
-        message: 'Data de venda deve ser uma data válida.'
-    })
-    
-    .min(new Date(min_selling_date), { message: 'Data de venda deve ser maior ou igual a 01/01/2020.' })
-    .max(new Date())
-    .optional(),
+    selling_date: z.coerce.date()
+        .min(min_selling_date, { message: 'Data de venda deve ser maior ou igual a 01/01/2020.' })
+        .max(new Date())
+        .optional(),
 
-    selling_price: z.coerce.number().optional()
+    selling_price: z.coerce.number()
         .positive({ message: 'Preço de venda deve ser um número positivo.' })
         .gte(1000, { message: 'Preço de venda deve ser maior ou igual a 1000.' })
         .lte(5000000, { message: 'Preço de venda deve ser menor ou igual a 5.000.000.' }),

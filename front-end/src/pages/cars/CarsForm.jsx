@@ -14,6 +14,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
 // import TextInput from '@mui/material/TextField'
+import Car from '../../models/Car'
 import { ZodError } from 'zod'
 
 import fetchAuth from '../../lib/fetchAuth'
@@ -119,7 +120,7 @@ export default function CarsForm() {
     feedbackWait(true)
     try {
 
-
+      Car.parse(cars)
       /* Infoca o fetch para enviar os dados ao back-end.
       Se houver parâmetro na rota, significa que estamos alterando
       um registro existente e, portanto, o verbo precisa ser PUT */
