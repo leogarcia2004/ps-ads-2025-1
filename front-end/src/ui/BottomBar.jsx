@@ -31,8 +31,8 @@ export default function BottomBar(){
             <CoffeeIcon 
             fontSize='small' 
             sx={{mb: -0.5}}
-            /> por <a href="mailto:rafaelasantosdeveloper@gmail.com">
-            Rafaela Aparecida Dos Santos</a>
+            /> por <a href="mailto:leonardogarcia1914@hotmail.com">
+            Leonardo Garcia</a>
             </Typography>     
         </Toolbar>
     )

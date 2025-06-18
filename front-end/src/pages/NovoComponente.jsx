@@ -35,14 +35,14 @@ export default function NovoComponente() {
                 <CardContent>
                     {/* meu nome*/}
                     <Typography gutterBottom variant="h5" component="div">
-                    Rafaela Aparecida Dos Santos
+                    Leonardo Garcia
                     </Typography>
 
                     {/* Texto sobre mim*/}
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     Sou estudante de Análise e Desenvolvimento de Sistemas na Faculdade de 
                     Tecnologia - Fatec Franca, com uma paixão intensa por tecnologia e inovação. 
-                    Estou ansiosa para iniciar minha carreira e aplicar meus conhecimentos em um ambiente 
+                    Estou ansioso para iniciar minha carreira e aplicar meus conhecimentos em um ambiente 
                     profissional desafiador e colaborativo.
                     </Typography>
                 </CardContent>
